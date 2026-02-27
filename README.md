@@ -8,6 +8,10 @@ you can either delete all links in project, or individually.
 
 in the end execs into nix-collect-garbage if you want it to.
 
+# Installation
+
+This flake contains package called `nixgc-clear`.
+
 # License
 
 MIT. see `LICENSE`
