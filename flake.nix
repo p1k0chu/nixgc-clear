@@ -7,75 +7,64 @@
   };
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
     crate2nix.url = "github:nix-community/crate2nix";
     crate2nix.inputs = {
-      nixpkgs.follows = "nixpkgs";
       cachix.follows = "";
       crate2nix_stable.follows = "";
       flake-compat.follows = "";
       nix-test-runner.follows = "";
-      # as much as i'd love to disable those too, it wont work.
-      # devshell.follows = "";
-      # pre-commit-hooks.follows = "";
     };
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       crate2nix,
+      flake-parts,
+      ...
     }:
-    let
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      perSystem =
+        { pkgs, system, ... }:
+        {
+          devShells = {
+            default = pkgs.mkShell {
+              packages = with pkgs; [
+                rustc
+                clippy
+                cargo
+                rust-analyzer
+                rustfmt
+              ];
+            };
+          };
+
+          packages =
+            let
+              cargoNix = crate2nix.tools."${system}".generatedCargoNix {
+                name = "nixgc-clear";
+                src = ./.;
+              };
+              cargoNix' = pkgs.callPackage "${cargoNix}/default.nix" { };
+            in
+            {
+              cargoNix = cargoNix;
+
+            }
+            // rec {
+              nixgc-clear = cargoNix'.rootCrate.build;
+              default = nixgc-clear;
+            };
+        };
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      forAllSystems =
-        func:
-        nixpkgs.lib.genAttrs systems (
-          system:
-          let
-            pkgs = import nixpkgs { inherit system; };
-            cargoNix = crate2nix.tools."${system}".appliedCargoNix {
-              name = "nixgc-clear";
-              src = ./.;
-            };
-          in
-          (func {
-            inherit
-              pkgs
-              system
-              cargoNix
-              ;
-          })
-        );
-
-    in
-    {
-      devShells = forAllSystems (
-        { pkgs, ... }:
-        {
-          default = pkgs.mkShell {
-            packages = with pkgs; [
-              rustc
-              clippy
-              cargo
-              rust-analyzer
-              rustfmt
-            ];
-          };
-        }
-      );
-
-      packages = forAllSystems (
-        { cargoNix, ... }:
-        rec {
-          nixgc-clear = cargoNix.rootCrate.build;
-          default = nixgc-clear;
-        }
-      );
     };
 }
