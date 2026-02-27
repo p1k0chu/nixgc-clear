@@ -11,7 +11,7 @@ unsafe extern "C" {
 
 pub fn execvp_safe(path: &CStr, argv: &[&CStr]) -> Error {
     let argv: Vec<_> = iter::once(path)
-        .chain(argv.to_owned().into_iter())
+        .chain(argv.to_owned())
         .map(|i| i.as_ptr())
         .collect();
 

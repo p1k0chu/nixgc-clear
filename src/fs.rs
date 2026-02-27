@@ -1,10 +1,9 @@
-use std::io;
-use std::path::Path;
 use crate::unix::{getegid, geteuid};
+use std::io;
+use std::os::unix::fs::MetadataExt;
+use std::path::Path;
 
 pub fn can_delete(path: &Path) -> io::Result<bool> {
-    use std::os::unix::fs::MetadataExt;
-
     let meta = match path.parent().unwrap().symlink_metadata() {
         Ok(meta) => meta,
         Err(err) => match err.kind() {

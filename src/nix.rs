@@ -1,6 +1,8 @@
 use crate::error::{Error, Result};
+use crate::fs::can_delete;
 use std::{
     io::{self, BufRead},
+    path::Path,
     process::{Command, Stdio},
 };
 
@@ -33,7 +35,7 @@ pub fn get_gc_roots() -> Result<Vec<String>> {
             Ok(line)
         })
         .filter(|path| match path {
-            Ok(path) => crate::fs::can_delete(std::path::Path::new(path)).unwrap_or(false),
+            Ok(path) => can_delete(Path::new(path)).unwrap_or(false),
             Err(_) => true,
         })
         .collect::<io::Result<Vec<_>>>()?)
