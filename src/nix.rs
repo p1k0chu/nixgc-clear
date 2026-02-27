@@ -40,3 +40,17 @@ pub fn get_gc_roots() -> Result<Vec<String>> {
         })
         .collect::<io::Result<Vec<_>>>()?)
 }
+
+pub fn print_dead() -> Result<()> {
+    let mut child = Command::new("nix-store")
+        .args(["--gc", "--print-dead", "--keep-outputs"])
+        .stdin(Stdio::null())
+        .spawn()?;
+
+    let wait = child.wait()?;
+    if wait.success() {
+        Ok(())
+    } else {
+        Err(Error::ChildFailed(wait.code()))
+    }
+}

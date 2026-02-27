@@ -1,6 +1,6 @@
 use nixgc_clear::{
     ask,
-    nix::get_gc_roots,
+    nix::{get_gc_roots, print_dead},
     projects::{Projects, split_paths},
 };
 use std::{fs, path::Path};
@@ -37,9 +37,20 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if ask("Run nix-collect-garbage? [y/n]", &["y", "n"])? == "y" {
-        return Err(nixgc_clear::unix::execvp_safe(c"nix-collect-garbage", &[]).into());
+    loop {
+        match ask("Do you want to garbage collect? [y/n/p]", &["y", "n", "p"])? {
+            "y" => {
+                break Err(nixgc_clear::unix::execvp_safe(
+                    c"nix-store",
+                    &[c"--gc", c"--keep-outputs"],
+                )
+                .into());
+            }
+            "p" => {
+                print_dead()?;
+            }
+            "n" => break Ok(()),
+            _ => println!("i'm impressed."),
+        };
     }
-
-    Ok(())
 }

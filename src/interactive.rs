@@ -34,7 +34,7 @@ q - quit
                     );
                 }
                 "q" => return Err(Error::Quit),
-                _ => panic!("ask(...) returned invalid selection."),
+                _ => println!("how'd you do that?"),
             },
             Either::Right(i) => {
                 if i < project.links.len() {
