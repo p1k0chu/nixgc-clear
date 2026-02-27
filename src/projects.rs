@@ -14,19 +14,16 @@ pub struct Project<'a> {
 }
 
 pub fn split_paths<'a>(paths: &[&'a Path]) -> Result<Projects<'a>> {
-    let mut paths = paths.to_owned();
-    paths.sort();
-
     let mut projects: HashMap<&'a Path, Vec<&'a Path>> = HashMap::new();
     let mut noproject: Vec<_> = Vec::new();
 
-    for path in paths.into_iter() {
+    for path in paths.iter() {
         let proj_root = find_project_root(path)?;
         if let Some(proj_root) = proj_root {
             let proj = projects.entry(proj_root).or_default();
-            proj.push(path);
+            proj.push(*path);
         } else {
-            noproject.push(path);
+            noproject.push(*path);
         }
     }
 
